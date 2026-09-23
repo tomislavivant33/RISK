@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Osvoji Svijet</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#11161d;
+  --bg2:#161d26;
+  --panel:#1b232e;
+  --panel2:#212b38;
+  --line:#2c3846;
+  --ink:#e9e3d3;
+  --ink-dim:#9aa4b2;
+  --gold:#c9a24b;
+  --gold-dim:#7d6a3a;
+  --danger:#b23a3a;
+  --good:#3ab26a;
+  --NA:#6b8f71; --SA:#c98a4b; --EU:#5b7ea6; --AF:#b56b5c; --AZ:#8c7aa6; --AU:#c9a24b;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{
+  background:radial-gradient(ellipse at 50% -10%, #1a2230 0%, var(--bg) 55%);
+  color:var(--ink);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+}
+h1,h2,h3,.serif{font-family:'Cinzel',Georgia,serif;}
+::selection{background:var(--gold);color:#111;}
+button{
+  font-family:inherit;
+  cursor:pointer;
+  border:1px solid var(--line);
+  background:var(--panel2);
+  color:var(--ink);
+  border-radius:6px;
+  padding:9px 16px;
+  font-size:14px;
+  font-weight:600;
+  transition:border-color .15s, transform .1s;
+}
+button:hover:not(:disabled){border-color:var(--gold-dim);}
+button:active:not(:disabled){transform:scale(.97);}
+button:disabled{opacity:.4;cursor:default;}
+button.primary{background:linear-gradient(180deg,#8a6f2f,#6b5423);border-color:#a4833a;color:#f3e9cf;}
+button.primary:hover:not(:disabled){border-color:var(--gold);}
+button.danger{background:#3a2020;border-color:#5a2c2c;}
+input, select{
+  font-family:inherit;
+  background:var(--bg2);
+  border:1px solid var(--line);
+  color:var(--ink);
+  border-radius:6px;
+  padding:9px 12px;
+  font-size:14px;
+  width:100%;
+}
+input:focus, select:focus{outline:none; border-color:var(--gold-dim);}
+label{font-size:12px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:4px;}
+
+/* ---------- LOBBY ---------- */
+.center-wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:24px;}
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:28px;
+  width:100%;
+  max-width:420px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.card h1{font-size:26px; margin:0 0 4px; color:var(--gold);}
+.card .sub{color:var(--ink-dim); font-size:13px; margin-bottom:20px;}
+.field{margin-bottom:14px;}
+.color-row{display:flex; gap:8px; margin-bottom:14px;}
+.swatch{width:32px; height:32px; border-radius:50%; border:2px solid transparent; cursor:pointer;}
+.swatch.selected{border-color:var(--ink);}
+.tabs{display:flex; gap:0; margin-bottom:18px; border-bottom:1px solid var(--line);}
+.tab{flex:1; text-align:center; padding:10px; cursor:pointer; color:var(--ink-dim); border-bottom:2px solid transparent; font-weight:600; font-size:14px;}
+.tab.active{color:var(--gold); border-color:var(--gold);}
+.err{color:#e08080; font-size:13px; margin-top:8px; min-height:16px;}
+.room-code{font-size:34px; letter-spacing:.15em; font-weight:700; text-align:center; color:var(--gold); font-family:'Cinzel',serif; margin:10px 0;}
+.player-chip{display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--panel2); border-radius:6px; margin-bottom:6px;}
+.dot{width:12px; height:12px; border-radius:50%; flex-shrink:0;}
+.player-chip .name{flex:1;}
+.player-chip .tag{font-size:11px; color:var(--ink-dim); text-transform:uppercase;}
+
+/* ---------- GAME ---------- */
+#game{display:none; flex:1; flex-direction:column; min-height:100vh;}
+#topbar{
+  display:flex; align-items:center; gap:14px; padding:10px 16px;
+  background:var(--panel); border-bottom:1px solid var(--line); flex-wrap:wrap;
+}
+#topbar .brand{font-family:'Cinzel',serif; color:var(--gold); font-size:16px; margin-right:auto;}
+.turn-pill{
+  display:flex; align-items:center; gap:8px; background:var(--panel2);
+  border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-size:13px;
+}
+.turn-pill .dot{width:10px;height:10px;}
+.phase-badge{
+  background:var(--bg2); border:1px solid var(--gold-dim); color:var(--gold);
+  border-radius:20px; padding:6px 14px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;
+}
+#players-strip{display:flex; gap:6px; flex-wrap:wrap;}
+.pchip{display:flex;align-items:center;gap:5px;font-size:11px;background:var(--panel2);padding:4px 8px;border-radius:12px;border:1px solid var(--line);}
+.pchip.turn{border-color:var(--gold);}
+.pchip .dot{width:8px;height:8px;}
+
+#mid{display:flex; flex:1; min-height:0;}
+#map-wrap{flex:1; position:relative; background:radial-gradient(ellipse at 50% 40%, #17202c 0%, #0d1319 100%); overflow:hidden;}
+svg#map{width:100%; height:100%; display:block;}
+.territory-label{font-size:9px; fill:var(--ink-dim); font-family:'Inter',sans-serif; pointer-events:none; text-anchor:middle;}
+.territory-node{cursor:pointer; stroke-width:2;}
+.territory-node.selectable{stroke:var(--gold); stroke-width:3;}
+.territory-node.selected{stroke:#fff; stroke-width:3.5;}
+.troop-count{font-size:13px; font-weight:700; fill:#fff; font-family:'Inter',sans-serif; text-anchor:middle; pointer-events:none; text-shadow:0 1px 2px rgba(0,0,0,.8);}
+.edge-line{stroke:#3a4656; stroke-width:1.4; opacity:.55;}
+.building-icon{font-size:11px; text-anchor:middle; pointer-events:none;}
+
+#sidebar{
+  width:320px; flex-shrink:0; background:var(--panel); border-left:1px solid var(--line);
+  display:flex; flex-direction:column; min-height:0;
+}
+#action-panel{padding:16px; border-bottom:1px solid var(--line);}
+#action-panel h3{margin:0 0 8px; font-size:14px; color:var(--gold);}
+#action-panel .hint{font-size:12px; color:var(--ink-dim); line-height:1.5; margin-bottom:10px;}
+.action-row{display:flex; gap:8px; margin-top:10px;}
+.action-row button{flex:1;}
+.build-option{
+  display:flex; justify-content:space-between; align-items:center;
+  background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:8px; cursor:pointer;
+}
+.build-option:hover{border-color:var(--gold-dim);}
+.build-option .name{font-weight:600; font-size:13px;}
+.build-option .desc{font-size:11px; color:var(--ink-dim);}
+.stepper{display:flex; align-items:center; gap:10px; margin:10px 0;}
+.stepper button{width:34px; height:34px; padding:0; font-size:18px;}
+.stepper .val{font-size:20px; font-weight:700; min-width:30px; text-align:center; font-family:'Cinzel',serif;}
+
+#tabs-sidebar{display:flex; border-bottom:1px solid var(--line);}
+.stab{flex:1; text-align:center; padding:9px; font-size:12px; color:var(--ink-dim); cursor:pointer; text-transform:uppercase; letter-spacing:.04em; font-weight:600;}
+.stab.active{color:var(--gold); border-bottom:2px solid var(--gold);}
+#log-pane, #chat-pane{flex:1; overflow-y:auto; padding:12px 16px; font-size:12.5px; display:none;}
+#log-pane.active, #chat-pane.active{display:block;}
+.log-line{color:var(--ink-dim); margin-bottom:6px; line-height:1.4; border-left:2px solid var(--line); padding-left:8px;}
+.chat-line{margin-bottom:8px;}
+.chat-line b{margin-right:4px;}
+#chat-input-row{display:flex; gap:6px; padding:10px; border-top:1px solid var(--line);}
+#chat-input-row input{flex:1;}
+
+.legend{padding:12px 16px; border-top:1px solid var(--line); font-size:11px; color:var(--ink-dim);}
+.legend-row{display:flex; align-items:center; gap:6px; margin-bottom:4px;}
+.legend-dot{width:10px;height:10px;border-radius:2px;}
+
+#dice-overlay{
+  position:fixed; inset:0; background:rgba(10,14,19,.85); display:none;
+  align-items:center; justify-content:center; z-index:50; flex-direction:column;
+}
+#dice-overlay .battle{display:flex; gap:40px; align-items:center;}
+.dice-col{display:flex; flex-direction:column; align-items:center; gap:8px;}
+.dice-col .label{font-family:'Cinzel',serif; font-size:14px; color:var(--gold);}
+.die{
+  width:46px; height:46px; background:#f3ecd8; color:#222; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800;
+  box-shadow:0 4px 10px rgba(0,0,0,.4); font-family:'Inter',sans-serif;
+}
+.die.lose{background:#5a3030; color:#f3ecd8;}
+.die.win{background:#2f5a3c; color:#f3ecd8;}
+#dice-overlay .vs{font-family:'Cinzel',serif; font-size:28px; color:var(--ink-dim);}
+#dice-overlay .result-text{margin-top:22px; font-size:15px; color:var(--ink);}
+
+#winner-overlay{
+  position:fixed; inset:0; background:rgba(10,14,19,.92); display:none;
+  align-items:center; justify-content:center; z-index:60; flex-direction:column; text-align:center;
+}
+#winner-overlay h1{font-size:42px; color:var(--gold); margin-bottom:10px;}
+
+@media (max-width: 820px){
+  #mid{flex-direction:column;}
+  #sidebar{width:100%; border-left:none; border-top:1px solid var(--line); max-height:46vh;}
+  svg#map{height:100%;}
+  #map-wrap{min-height:44vh;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOBBY ============ -->
+<div class="center-wrap" id="lobby">
+  <div class="card">
+    <h1>Osvoji Svijet</h1>
+    <div class="sub">Strateška igra osvajanja svijeta &mdash; multiplayer</div>
+
+    <div class="field">
+      <label>Tvoje ime</label>
+      <input id="player-name" placeholder="Upišite ime" maxlength="20">
+    </div>
+    <div class="field">
+      <label>Boja</label>
+      <div class="color-row" id="color-row"></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="create">Nova soba</div>
+      <div class="tab" data-tab="join">Pridruži se</div>
+    </div>
+
+    <div id="tab-create">
+      <button class="primary" id="btn-create" style="width:100%;">Stvori sobu</button>
+    </div>
+    <div id="tab-join" style="display:none;">
+      <div class="field">
+        <label>Kod sobe</label>
+        <input id="join-code" placeholder="ABCDE" maxlength="5" style="text-transform:uppercase;">
+      </div>
+      <button class="primary" id="btn-join" style="width:100%;">Pridruži se</button>
+    </div>
+    <div class="err" id="lobby-err"></div>
+  </div>
+</div>
+
+<!-- ============ WAITING ROOM ============ -->
+<div class="center-wrap" id="waiting" style="display:none;">
+  <div class="card">
+    <h2 style="margin:0 0 2px;">Čekaonica</h2>
+    <div class="sub">Podijeli kod s prijateljima</div>
+    <div class="room-code" id="room-code-display">-----</div>
+    <div id="waiting-players"></div>
+    <div class="err" id="waiting-err"></div>
+    <div class="action-row">
+      <button class="primary" id="btn-start" style="display:none;">Počni igru</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div id="game">
+  <div id="topbar">
+    <div class="brand">⚔ Osvoji Svijet</div>
+    <div id="players-strip"></div>
+    <div class="turn-pill"><span class="dot" id="turn-dot"></span><span id="turn-name">-</span></div>
+    <div class="phase-badge" id="phase-badge">-</div>
+  </div>
+  <div id="mid">
+    <div id="map-wrap">
+      <svg id="map" viewBox="0 0 620 400" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div id="sidebar">
+      <div id="action-panel">
+        <h3 id="action-title">Pripajanje...</h3>
+        <div class="hint" id="action-hint"></div>
+        <div id="action-body"></div>
+      </div>
+      <div id="tabs-sidebar">
+        <div class="stab active" data-stab="log">Dnevnik</div>
+        <div class="stab" data-stab="chat">Chat</div>
+      </div>
+      <div id="log-pane" class="active"></div>
+      <div id="chat-pane"></div>
+      <div id="chat-input-row" style="display:none;">
+        <input id="chat-input" placeholder="Poruka...">
+        <button id="chat-send">Pošalji</button>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+</div>
+
+<div id="dice-overlay">
+  <div class="battle" id="battle-dice"></div>
+  <div class="result-text" id="battle-result"></div>
+</div>
+
+<div id="winner-overlay">
+  <h1 id="winner-text">🏆</h1>
+  <button class="primary" onclick="location.reload()">Nova igra</button>
+</div>
+
+<script>
+// ======================= SERVER ADRESA =======================
+// OVDJE upiši adresu servera nakon što ga postaviš na Render.com (vidi UPUTE.md).
+// Zamijeni https:// s wss:// — npr: "wss://osvoji-svijet.onrender.com"
+const SERVER_URL = "wss://TVOJ-SERVER.onrender.com";
+
+// ======================= STATIČKI PODACI MAPE =======================
+const CONTINENTS = {
+  NA: { name: 'Sjeverna Amerika', bonus: 5 },
+  SA: { name: 'Južna Amerika', bonus: 2 },
+  EU: { name: 'Europa', bonus: 5 },
+  AF: { name: 'Afrika', bonus: 3 },
+  AZ: { name: 'Azija', bonus: 7 },
+  AU: { name: 'Australija', bonus: 2 },
+};
+const TERRITORIES = [
+  { id: 0, name: 'Aljaska', c: 'NA', x: 100, y: 80 },
+  { id: 1, name: 'Kanada', c: 'NA', x: 165, y: 100 },
+  { id: 2, name: 'Grenland', c: 'NA', x: 240, y: 55 },
+  { id: 3, name: 'Meksiko', c: 'NA', x: 120, y: 165 },
+  { id: 4, name: 'Venezuela', c: 'SA', x: 155, y: 230 },
+  { id: 5, name: 'Peru', c: 'SA', x: 140, y: 285 },
+  { id: 6, name: 'Brazil', c: 'SA', x: 195, y: 270 },
+  { id: 7, name: 'Argentina', c: 'SA', x: 150, y: 335 },
+  { id: 8, name: 'Island', c: 'EU', x: 265, y: 90 },
+  { id: 9, name: 'Britanija', c: 'EU', x: 275, y: 122 },
+  { id: 10, name: 'Francuska', c: 'EU', x: 305, y: 145 },
+  { id: 11, name: 'Rusija Zapad', c: 'EU', x: 365, y: 110 },
+  { id: 12, name: 'Egipat', c: 'AF', x: 305, y: 213 },
+  { id: 13, name: 'Kongo', c: 'AF', x: 295, y: 262 },
+  { id: 14, name: 'Južna Afrika', c: 'AF', x: 285, y: 322 },
+  { id: 15, name: 'Madagaskar', c: 'AF', x: 345, y: 302 },
+  { id: 16, name: 'Sibir', c: 'AZ', x: 435, y: 88 },
+  { id: 17, name: 'Kina', c: 'AZ', x: 475, y: 152 },
+  { id: 18, name: 'Indija', c: 'AZ', x: 425, y: 192 },
+  { id: 19, name: 'Japan', c: 'AZ', x: 525, y: 128 },
+  { id: 20, name: 'Zapadna Australija', c: 'AU', x: 480, y: 282 },
+  { id: 21, name: 'Istočna Australija', c: 'AU', x: 535, y: 302 },
+  { id: 22, name: 'Nova Gvineja', c: 'AU', x: 500, y: 252 },
+  { id: 23, name: 'Indonezija', c: 'AU', x: 450, y: 252 },
+];
+const EDGE_LIST = [
+  [0,1],[1,2],[1,3],[2,8],[3,4],
+  [4,5],[4,6],[5,6],[5,7],[6,7],[6,13],
+  [8,9],[9,10],[10,11],[10,12],[11,16],[11,18],
+  [12,13],[12,18],[13,14],[13,15],
+  [16,17],[16,18],[17,18],[17,19],
+  [18,23],[19,23],
+  [20,21],[20,22],[20,23],[21,22],[22,23],
+];
+const ADJ = {};
+TERRITORIES.forEach(t => ADJ[t.id] = new Set());
+EDGE_LIST.forEach(([a,b]) => { ADJ[a].add(b); ADJ[b].add(a); });
+const BUILDINGS = {
+  barracks: { name: 'Baraka', cost: 3, desc: '+2 pojačanja / potez' },
+  fortress: { name: 'Utvrda', cost: 5, desc: '+1 na najjaču obrambenu kocku' },
+};
+const PLAYER_COLORS = ['#b23a3a', '#3a7ab2', '#3ab26a', '#d1962e', '#8a4fb2', '#6b7280'];
+
+// ======================= STANJE KLIJENTA =======================
+let ws = null;
+let myId = null, myName = '', myColor = PLAYER_COLORS[0];
+let roomCode = null, isHost = false;
+let players = [];
+let state = null; // publicState iz servera
+let selection = { from: null, to: null }; // za attack / fortify
+
+// ======================= POMOĆNO: KONVEKSNA LJUSKA (za kontinente) =======================
+function convexHull(points) {
+  if (points.length < 3) return points;
+  points = points.slice().sort((a,b) => a.x - b.x || a.y - b.y);
+  const cross = (o,a,b) => (a.x-o.x)*(b.y-o.y) - (a.y-o.y)*(b.x-o.x);
+  const lower = [];
+  for (const p of points) {
+    while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (let i = points.length - 1; i >= 0; i--) {
+    const p = points[i];
+    while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  upper.pop(); lower.pop();
+  return lower.concat(upper);
+}
+function expandHull(hull, amount) {
+  // pomakni svaku točku dalje od centroida za 'amount'
+  const cx = hull.reduce((s,p)=>s+p.x,0)/hull.length;
+  const cy = hull.reduce((s,p)=>s+p.y,0)/hull.length;
+  return hull.map(p => {
+    const dx = p.x - cx, dy = p.y - cy;
+    const len = Math.sqrt(dx*dx+dy*dy) || 1;
+    return { x: p.x + (dx/len)*amount, y: p.y + (dy/len)*amount };
+  });
+}
+
+// ======================= LOBBY UI =======================
+const colorRow = document.getElementById('color-row');
+PLAYER_COLORS.forEach((c,i) => {
+  const sw = document.createElement('div');
+  sw.className = 'swatch' + (i===0?' selected':'');
+  sw.style.background = c;
+  sw.onclick = () => {
+    document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+    sw.classList.add('selected');
+    myColor = c;
+  };
+  colorRow.appendChild(sw);
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-create').style.display = tab.dataset.tab === 'create' ? 'block' : 'none';
+    document.getElementById('tab-join').style.display = tab.dataset.tab === 'join' ? 'block' : 'none';
+  };
+});
+
+// prefill iz localStorage
+document.getElementById('player-name').value = localStorage.getItem('ow_name') || '';
+
+function connectWS(onOpen) {
+  if (!SERVER_URL || SERVER_URL.includes('TVOJ-SERVER')) {
+    setLobbyErr('Adresa servera još nije postavljena u kodu (SERVER_URL na vrhu <script> dijela).');
+    return;
+  }
+  try {
+    ws = new WebSocket(SERVER_URL);
+  } catch(e) { setLobbyErr('Neispravna adresa servera.'); return; }
+  ws.onopen = onOpen;
+  ws.onerror = () => setLobbyErr('Ne mogu se spojiti na server.');
+  ws.onclose = () => { if (!state) setLobbyErr('Veza prekinuta.'); };
+  ws.onmessage = (ev) => handleMessage(JSON.parse(ev.data));
+}
+function setLobbyErr(msg) { document.getElementById('lobby-err').textContent = msg; }
+function setWaitingErr(msg) { document.getElementById('waiting-err').textContent = msg; }
+
+document.getElementById('btn-create').onclick = () => {
+  const name = document.getElementById('player-name').value.trim() || 'Igrač';
+  localStorage.setItem('ow_name', name);
+  myName = name;
+  setLobbyErr('');
+  connectWS(() => ws.send(JSON.stringify({ type:'create_room', name })));
+};
+document.getElementById('btn-join').onclick = () => {
+  const name = document.getElementById('player-name').value.trim() || 'Igrač';
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (!code) { setLobbyErr('Unesi kod sobe.'); return; }
+  localStorage.setItem('ow_name', name);
+  myName = name;
+  setLobbyErr('');
+  connectWS(() => ws.send(JSON.stringify({ type:'join_room', code, name })));
+};
+
+function handleMessage(msg) {
+  switch(msg.type) {
+    case 'room_created':
+      roomCode = msg.code; myId = msg.playerId; isHost = true;
+      players = msg.players;
+      saveSession();
+      showWaiting();
+      break;
+    case 'room_joined':
+      roomCode = msg.code; myId = msg.playerId; isHost = false;
+      players = msg.players;
+      saveSession();
+      showWaiting();
+      break;
+    case 'rejoined':
+      roomCode = msg.code; myId = msg.playerId; isHost = (msg.hostId === myId);
+      players = msg.players;
+      if (msg.started) { state = msg.state; showGame(); renderAll(); }
+      else showWaiting();
+      break;
+    case 'players_update':
+      players = msg.players;
+      if (document.getElementById('waiting').style.display !== 'none') renderWaitingPlayers();
+      if (state) renderTopbar();
+      break;
+    case 'error':
+      setLobbyErr(msg.message); setWaitingErr(msg.message);
+      break;
+    case 'game_started':
+      state = msg.state; players = msg.players || players;
+      showGame(); renderAll();
+      break;
+    case 'attack_result':
+      handleAttackResult(msg);
+      break;
+    case 'state_update':
+      state = msg.state;
+      clearSelectionIfInvalid();
+      renderAll();
+      break;
+    case 'chat':
+      addChatLine(msg.name, msg.color, msg.text);
+      break;
+  }
+}
+function saveSession(){
+  localStorage.setItem('ow_session', JSON.stringify({ code: roomCode, playerId: myId }));
+}
+
+function showWaiting() {
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('waiting').style.display = 'flex';
+  document.getElementById('room-code-display').textContent = roomCode;
+  document.getElementById('btn-start').style.display = isHost ? 'block' : 'none';
+  document.getElementById('btn-start').onclick = () => ws.send(JSON.stringify({ type:'start_game' }));
+  renderWaitingPlayers();
+}
+function renderWaitingPlayers() {
+  const el = document.getElementById('waiting-players');
+  el.innerHTML = '';
+  players.forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip';
+    chip.innerHTML = `<span class="dot" style="background:${p.color}"></span><span class="name">${escapeHtml(p.name)}</span><span class="tag">${p.isHost?'domaćin':''}${p.connected?'':' • odspojen'}</span>`;
+    el.appendChild(chip);
+  });
+}
+
+function showGame() {
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('waiting').style.display = 'none';
+  document.getElementById('game').style.display = 'flex';
+  document.getElementById('chat-input-row').style.display = 'flex';
+  buildStaticMap();
+  buildLegend();
+}
+
+// ======================= MAPA (statički dio: kontinenti, rubovi, oznake) =======================
+const svg = document.getElementById('map');
+const NS = 'http://www.w3.org/2000/svg';
+function buildStaticMap() {
+  svg.innerHTML = '';
+  const contGroup = document.createElementNS(NS,'g');
+  Object.keys(CONTINENTS).forEach(cid => {
+    const pts = TERRITORIES.filter(t=>t.c===cid).map(t=>({x:t.x,y:t.y}));
+    let hull = convexHull(pts);
+    hull = expandHull(hull, 34);
+    const poly = document.createElementNS(NS,'polygon');
+    poly.setAttribute('points', hull.map(p=>`${p.x},${p.y}`).join(' '));
+    poly.setAttribute('fill', `var(--${cid})`);
+    poly.setAttribute('fill-opacity','0.10');
+    poly.setAttribute('stroke', `var(--${cid})`);
+    poly.setAttribute('stroke-opacity','0.35');
+    poly.setAttribute('stroke-width','1.5');
+    contGroup.appendChild(poly);
+  });
+  svg.appendChild(contGroup);
+
+  const edgeGroup = document.createElementNS(NS,'g');
+  EDGE_LIST.forEach(([a,b]) => {
+    const ta = TERRITORIES[a], tb = TERRITORIES[b];
+    const line = document.createElementNS(NS,'line');
+    line.setAttribute('x1',ta.x); line.setAttribute('y1',ta.y);
+    line.setAttribute('x2',tb.x); line.setAttribute('y2',tb.y);
+    line.setAttribute('class','edge-line');
+    edgeGroup.appendChild(line);
+  });
+  svg.appendChild(edgeGroup);
+
+  const nodeGroup = document.createElementNS(NS,'g');
+  nodeGroup.id = 'node-group';
+  TERRITORIES.forEach(t => {
+    const g = document.createElementNS(NS,'g');
+    g.setAttribute('data-id', t.id);
+    g.style.cursor = 'pointer';
+
+    const circle = document.createElementNS(NS,'circle');
+    circle.setAttribute('cx', t.x); circle.setAttribute('cy', t.y); circle.setAttribute('r', 15);
+    circle.setAttribute('class', 'territory-node');
+    circle.setAttribute('stroke', `var(--${t.c})`);
+    circle.id = 'node-'+t.id;
+    g.appendChild(circle);
+
+    const label = document.createElementNS(NS,'text');
+    label.setAttribute('x', t.x); label.setAttribute('y', t.y - 20);
+    label.setAttribute('class','territory-label');
+    label.textContent = t.name;
+    g.appendChild(label);
+
+    const troopText = document.createElementNS(NS,'text');
+    troopText.setAttribute('x', t.x); troopText.setAttribute('y', t.y + 4);
+    troopText.setAttribute('class','troop-count');
+    troopText.id = 'troops-'+t.id;
+    g.appendChild(troopText);
+
+    const buildIcon = document.createElementNS(NS,'text');
+    buildIcon.setAttribute('x', t.x + 14); buildIcon.setAttribute('y', t.y - 10);
+    buildIcon.setAttribute('class','building-icon');
+    buildIcon.id = 'build-'+t.id;
+    g.appendChild(buildIcon);
+
+    g.onclick = () => onTerritoryClick(t.id);
+    nodeGroup.appendChild(g);
+  });
+  svg.appendChild(nodeGroup);
+}
+
+function buildLegend() {
+  const el = document.getElementById('legend');
+  el.innerHTML = '<div style="margin-bottom:6px;font-weight:700;color:var(--ink);">Bonusi kontinenata</div>' +
+    Object.entries(CONTINENTS).map(([cid,c]) =>
+      `<div class="legend-row"><span class="legend-dot" style="background:var(--${cid})"></span>${c.name} (+${c.bonus})</div>`
+    ).join('');
+}
+
+// ======================= RENDER DINAMIČKOG STANJA =======================
+function playerById(id) { return players.find(p=>p.id===id); }
+
+function renderAll() {
+  if (!state) return;
+  renderTopbar();
+  renderMap();
+  renderActionPanel();
+  renderLog();
+}
+
+function renderTopbar() {
+  const strip = document.getElementById('players-strip');
+  strip.innerHTML = '';
+  players.forEach(p => {
+    const chip = document.createElement('div');
+    const isTurn = state && state.currentPlayerId === p.id;
+    const isElim = state && state.eliminated && state.eliminated.includes(p.id);
+    chip.className = 'pchip' + (isTurn?' turn':'');
+    chip.style.opacity = isElim ? 0.35 : 1;
+    const terrCount = state ? state.territories.filter(t=>t.owner===p.id).length : 0;
+    chip.innerHTML = `<span class="dot" style="background:${p.color}"></span>${escapeHtml(p.name)} · ${terrCount}${isElim?' ☠':''}`;
+    strip.appendChild(chip);
+  });
+  if (state) {
+    const cur = playerById(state.currentPlayerId);
+    document.getElementById('turn-dot').style.background = cur ? cur.color : '#888';
+    document.getElementById('turn-name').textContent = cur ? (cur.id===myId ? 'Ti si na potezu' : cur.name + ' je na potezu') : '-';
+    const phaseNames = { reinforce:'Pojačanje', attack:'Napad', build:'Gradnja', fortify:'Utvrđivanje' };
+    document.getElementById('phase-badge').textContent = phaseNames[state.phase] || state.phase;
+  }
+}
+
+function renderMap() {
+  TERRITORIES.forEach(t => {
+    const data = state.territories[t.id];
+    const owner = playerById(data.owner);
+    const circle = document.getElementById('node-'+t.id);
+    circle.setAttribute('fill', owner ? owner.color : '#333');
+    circle.classList.remove('selectable','selected');
+    document.getElementById('troops-'+t.id).textContent = data.troops;
+    document.getElementById('build-'+t.id).textContent = data.building === 'barracks' ? '🏰' : data.building === 'fortress' ? '🛡' : '';
+  });
+  highlightSelectable();
+}
+
+function highlightSelectable() {
+  if (!state || state.currentPlayerId !== myId) return;
+  const phase = state.phase;
+  if (phase === 'reinforce') {
+    state.territories.forEach(t => {
+      if (t.owner === myId) document.getElementById('node-'+t.id).classList.add('selectable');
+    });
+  } else if (phase === 'attack') {
+    if (!selection.from) {
+      state.territories.forEach(t => {
+        if (t.owner === myId && t.troops > 1) document.getElementById('node-'+t.id).classList.add('selectable');
+      });
+    } else {
+      document.getElementById('node-'+selection.from).classList.add('selected');
+      ADJ[selection.from].forEach(tid => {
+        if (state.territories[tid].owner !== myId) document.getElementById('node-'+tid).classList.add('selectable');
+      });
+    }
+  } else if (phase === 'build') {
+    state.territories.forEach(t => {
+      if (t.owner === myId && !t.building) document.getElementById('node-'+t.id).classList.add('selectable');
+    });
+  } else if (phase === 'fortify' && !state.fortifyUsed) {
+    if (!selection.from) {
+      state.territories.forEach(t => {
+        if (t.owner === myId && t.troops > 1) document.getElementById('node-'+t.id).classList.add('selectable');
+      });
+    } else {
+      document.getElementById('node-'+selection.from).classList.add('selected');
+      ADJ[selection.from].forEach(tid => {
+        if (state.territories[tid].owner === myId) document.getElementById('node-'+tid).classList.add('selectable');
+      });
+    }
+  }
+}
+
+function clearSelectionIfInvalid() {
+  if (!state || state.currentPlayerId !== myId) selection = { from:null, to:null };
+}
+
+// ======================= INTERAKCIJA S TERITORIJIMA =======================
+function onTerritoryClick(id) {
+  if (!state || state.currentPlayerId !== myId) return;
+  const t = state.territories[id];
+  const phase = state.phase;
+
+  if (phase === 'reinforce') {
+    if (t.owner === myId && state.reinforcementsRemaining > 0) {
+      ws.send(JSON.stringify({ type:'place_reinforcement', territoryId:id }));
+    }
+    return;
+  }
+
+  if (phase === 'attack') {
+    if (!selection.from) {
+      if (t.owner === myId && t.troops > 1) { selection.from = id; renderMap(); renderActionPanel(); }
+    } else {
+      if (id === selection.from) { selection = {from:null,to:null}; renderMap(); renderActionPanel(); return; }
+      if (t.owner !== myId && ADJ[selection.from].has(id)) {
+        selection.to = id; renderActionPanel();
+      }
+    }
+    return;
+  }
+
+  if (phase === 'build') {
+    if (t.owner === myId && !t.building) { selection.from = id; renderActionPanel(); }
+    return;
+  }
+
+  if (phase === 'fortify' && !state.fortifyUsed) {
+    if (!selection.from) {
+      if (t.owner === myId && t.troops > 1) { selection.from = id; renderMap(); renderActionPanel(); }
+    } else {
+      if (id === selection.from) { selection = {from:null,to:null}; renderMap(); renderActionPanel(); return; }
+      if (t.owner === myId && ADJ[selection.from].has(id)) {
+        selection.to = id; renderActionPanel();
+      }
+    }
+    return;
+  }
+}
+
+// ======================= AKCIJSKI PANEL (kontekstno) =======================
+function renderActionPanel() {
+  const title = document.getElementById('action-title');
+  const hint = document.getElementById('action-hint');
+  const body = document.getElementById('action-body');
+  body.innerHTML = '';
+
+  if (state && state.winner) {
+    title.textContent = 'Igra gotova';
+    hint.textContent = '';
+    return;
+  }
+  if (!state || state.currentPlayerId !== myId) {
+    const cur = state ? playerById(state.currentPlayerId) : null;
+    title.textContent = 'Čekanje';
+    hint.textContent = cur ? `Čeka se potez igrača ${cur.name}...` : '';
+    return;
+  }
+
+  const phase = state.phase;
+
+  if (phase === 'reinforce') {
+    title.textContent = `Pojačanje (${state.reinforcementsRemaining} preostalo)`;
+    hint.textContent = 'Klikni na svoj teritorij da rasporediš vojnike.';
+    const btn = document.createElement('button');
+    btn.className = 'primary';
+    btn.textContent = 'Završi fazu pojačanja';
+    btn.disabled = state.reinforcementsRemaining > 0;
+    btn.onclick = () => ws.send(JSON.stringify({ type:'end_phase' }));
+    body.appendChild(btn);
+  }
+
+  else if (phase === 'attack') {
+    title.textContent = 'Napad';
+    if (!selection.from) {
+      hint.textContent = 'Klikni na svoj teritorij (2+ vojnika) za napad.';
+    } else if (!selection.to) {
+      hint.textContent = 'Klikni na susjedni neprijateljski teritorij za napad.';
+    } else {
+      const from = state.territories[selection.from];
+      const maxDice = Math.min(3, from.troops - 1);
+      hint.textContent = `${TERRITORIES[selection.from].name} → ${TERRITORIES[selection.to].name}`;
+      const stepper = document.createElement('div');
+      stepper.innerHTML = `<label>Broj kockica napadača (max ${maxDice})</label>`;
+      body.appendChild(stepper);
+      const row = document.createElement('div');
+      row.className = 'stepper';
+      let dice = maxDice;
+      const valSpan = document.createElement('span'); valSpan.className='val'; valSpan.textContent=dice;
+      const minus = document.createElement('button'); minus.textContent='−';
+      const plus = document.createElement('button'); plus.textContent='+';
+      minus.onclick = () => { if (dice>1) { dice--; valSpan.textContent=dice; } };
+      plus.onclick = () => { if (dice<maxDice) { dice++; valSpan.textContent=dice; } };
+      row.appendChild(minus); row.appendChild(valSpan); row.appendChild(plus);
+      body.appendChild(row);
+
+      const actionRow = document.createElement('div');
+      actionRow.className = 'action-row';
+      const atkBtn = document.createElement('button');
+      atkBtn.className = 'primary';
+      atkBtn.textContent = '⚔ Napadni';
+      atkBtn.onclick = () => {
+        ws.send(JSON.stringify({ type:'attack', fromId:selection.from, toId:selection.to, diceCount:dice, moveTroops:dice }));
+        selection = { from:null, to:null };
+      };
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Odustani';
+      cancelBtn.onclick = () => { selection = {from:null,to:null}; renderMap(); renderActionPanel(); };
+      actionRow.appendChild(atkBtn); actionRow.appendChild(cancelBtn);
+      body.appendChild(actionRow);
+    }
+    if (!selection.to) {
+      const endBtn = document.createElement('button');
+      endBtn.className = 'primary';
+      endBtn.style.marginTop = '10px';
+      endBtn.style.width = '100%';
+      endBtn.textContent = 'Završi fazu napada';
+      endBtn.onclick = () => { selection={from:null,to:null}; ws.send(JSON.stringify({ type:'end_phase' })); };
+      body.appendChild(endBtn);
+    }
+  }
+
+  else if (phase === 'build') {
+    title.textContent = 'Gradnja';
+    if (!selection.from) {
+      hint.textContent = 'Klikni na svoj teritorij bez građevine.';
+    } else {
+      const t = state.territories[selection.from];
+      hint.textContent = `${TERRITORIES[selection.from].name} (${t.troops} vojnika)`;
+      Object.entries(BUILDINGS).forEach(([key,b]) => {
+        const opt = document.createElement('div');
+        opt.className = 'build-option';
+        const affordable = t.troops > b.cost;
+        opt.style.opacity = affordable ? 1 : 0.4;
+        opt.style.cursor = affordable ? 'pointer' : 'default';
+        opt.innerHTML = `<div><div class="name">${b.name}</div><div class="desc">${b.desc}</div></div><div class="desc">${b.cost} vojnika</div>`;
+        if (affordable) opt.onclick = () => {
+          ws.send(JSON.stringify({ type:'build', territoryId:selection.from, buildingType:key }));
+          selection = { from:null, to:null };
+        };
+        body.appendChild(opt);
+      });
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Odustani';
+      cancelBtn.style.marginTop = '6px';
+      cancelBtn.onclick = () => { selection = {from:null,to:null}; renderActionPanel(); };
+      body.appendChild(cancelBtn);
+    }
+    const endBtn = document.createElement('button');
+    endBtn.className = 'primary';
+    endBtn.style.marginTop = '10px';
+    endBtn.style.width = '100%';
+    endBtn.textContent = 'Završi fazu gradnje';
+    endBtn.onclick = () => { selection={from:null,to:null}; ws.send(JSON.stringify({ type:'end_phase' })); };
+    body.appendChild(endBtn);
+  }
+
+  else if (phase === 'fortify') {
+    title.textContent = 'Utvrđivanje';
+    if (state.fortifyUsed) {
+      hint.textContent = 'Već si premjestio vojnike ovaj potez.';
+    } else if (!selection.from) {
+      hint.textContent = 'Klikni na svoj teritorij (2+ vojnika) kao izvor.';
+    } else if (!selection.to) {
+      hint.textContent = 'Klikni na susjedni svoj teritorij kao odredište.';
+    } else {
+      const from = state.territories[selection.from];
+      hint.textContent = `${TERRITORIES[selection.from].name} → ${TERRITORIES[selection.to].name}`;
+      const row = document.createElement('div');
+      row.className = 'stepper';
+      let amt = 1; const max = from.troops - 1;
+      const valSpan = document.createElement('span'); valSpan.className='val'; valSpan.textContent=amt;
+      const minus = document.createElement('button'); minus.textContent='−';
+      const plus = document.createElement('button'); plus.textContent='+';
+      minus.onclick = () => { if (amt>1) { amt--; valSpan.textContent=amt; } };
+      plus.onclick = () => { if (amt<max) { amt++; valSpan.textContent=amt; } };
+      row.appendChild(minus); row.appendChild(valSpan); row.appendChild(plus);
+      body.appendChild(row);
+      const actionRow = document.createElement('div');
+      actionRow.className = 'action-row';
+      const okBtn = document.createElement('button');
+      okBtn.className = 'primary'; okBtn.textContent = 'Premjesti';
+      okBtn.onclick = () => {
+        ws.send(JSON.stringify({ type:'fortify', fromId:selection.from, toId:selection.to, amount:amt }));
+        selection = { from:null, to:null };
+      };
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Odustani';
+      cancelBtn.onclick = () => { selection = {from:null,to:null}; renderMap(); renderActionPanel(); };
+      actionRow.appendChild(okBtn); actionRow.appendChild(cancelBtn);
+      body.appendChild(actionRow);
+    }
+    const endBtn = document.createElement('button');
+    endBtn.className = 'primary';
+    endBtn.style.marginTop = '10px';
+    endBtn.style.width = '100%';
+    endBtn.textContent = 'Završi potez';
+    endBtn.onclick = () => { selection={from:null,to:null}; ws.send(JSON.stringify({ type:'end_phase' })); };
+    body.appendChild(endBtn);
+  }
+}
+
+// ======================= DICE OVERLAY =======================
+function handleAttackResult(msg) {
+  const overlay = document.getElementById('dice-overlay');
+  const battle = document.getElementById('battle-dice');
+  const resultText = document.getElementById('battle-result');
+  battle.innerHTML = '';
+
+  const attCol = document.createElement('div'); attCol.className = 'dice-col';
+  attCol.innerHTML = `<div class="label">${TERRITORIES[msg.fromId].name}</div>`;
+  msg.rollsA.forEach((v,i) => {
+    const d = document.createElement('div');
+    d.className = 'die' + (i < msg.rollsD.length ? (v > msg.rollsD[i] ? ' win' : ' lose') : '');
+    d.textContent = v;
+    attCol.appendChild(d);
+  });
+  const vs = document.createElement('div'); vs.className='vs'; vs.textContent='VS';
+  const defCol = document.createElement('div'); defCol.className = 'dice-col';
+  defCol.innerHTML = `<div class="label">${TERRITORIES[msg.toId].name}</div>`;
+  msg.rollsD.forEach((v,i) => {
+    const d = document.createElement('div');
+    d.className = 'die' + (i < msg.rollsA.length ? (v >= msg.rollsA[i] ? ' win' : ' lose') : '');
+    d.textContent = v;
+    defCol.appendChild(d);
+  });
+  battle.appendChild(attCol); battle.appendChild(vs); battle.appendChild(defCol);
+  resultText.textContent = msg.conquered
+    ? `${TERRITORIES[msg.toId].name} je osvojena!`
+    : `Napadač gubi ${msg.attackerLosses}, branitelj gubi ${msg.defenderLosses}.`;
+
+  overlay.style.display = 'flex';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    state = msg.state;
+    clearSelectionIfInvalid();
+    renderAll();
+    checkWinner();
+  }, 1600);
+}
+
+function checkWinner() {
+  if (state && state.winner) {
+    const w = playerById(state.winner);
+    document.getElementById('winner-text').textContent = `🏆 ${w ? w.name : '?'} je osvojio svijet!`;
+    document.getElementById('winner-overlay').style.display = 'flex';
+  }
+}
+
+// ======================= LOG / CHAT =======================
+function renderLog() {
+  const pane = document.getElementById('log-pane');
+  pane.innerHTML = state.log.map(l => `<div class="log-line">${escapeHtml(l)}</div>`).join('');
+  pane.scrollTop = pane.scrollHeight;
+}
+function addChatLine(name, color, text) {
+  const pane = document.getElementById('chat-pane');
+  const line = document.createElement('div');
+  line.className = 'chat-line';
+  line.innerHTML = `<b style="color:${color}">${escapeHtml(name)}:</b>${escapeHtml(text)}`;
+  pane.appendChild(line);
+  pane.scrollTop = pane.scrollHeight;
+}
+document.querySelectorAll('.stab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('log-pane').classList.toggle('active', tab.dataset.stab==='log');
+    document.getElementById('chat-pane').classList.toggle('active', tab.dataset.stab==='chat');
+  };
+});
+document.getElementById('chat-send').onclick = sendChat;
+document.getElementById('chat-input').addEventListener('keydown', e => { if (e.key==='Enter') sendChat(); });
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !ws) return;
+  ws.send(JSON.stringify({ type:'chat', text }));
+  input.value = '';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>
